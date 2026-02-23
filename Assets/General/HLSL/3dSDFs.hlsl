@@ -1,4 +1,5 @@
 // ------------------------ SDFs ------------------------
+// by iq : https://iquilezles.org/articles/distfunctions/
 float sphereSDF(float3 q, float radius)
 {
     return length(q) - radius;
@@ -54,6 +55,11 @@ float boxSDF(float3 p, float3 b)
     return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
 }
 
+float torusSDF(float3 p, float2 t)
+{
+    float2 q = float2(length(p.xz) - t.x, p.y);
+    return length(q) - t.y;
+}
 
 float capsuleSDF(float3 p, float3 a, float3 b, float r)
 {
@@ -112,3 +118,11 @@ float TriangleIsoscelesSDF(in float2 p, in float2 q)
     float s = max(k * (p.x * q.y - p.y * q.x), k * (p.y - q.y));
     return sqrt(d) * sign(s);
 }
+
+float smin(float a, float b, float k)
+{
+    float h = saturate(0.5 + 0.5 * (b - a) / k);
+    return lerp(b, a, h) - k * h * (1.0 - h);
+}
+            
+            

@@ -45,7 +45,7 @@ Shader "Unlit/RaymarchedGlass"
 
             samplerCUBE _envMap;
            
-            #include "Assets/General/HLSL/raymarch.hlsl" 
+            #include "raymarchGlass.hlsl" 
             #include "Assets/General/HLSL/3DSDFs.hlsl"
 
             #define MAX_BOUNCE 4
@@ -95,7 +95,49 @@ Shader "Unlit/RaymarchedGlass"
                 if (dg < d) { d = dg; materialID = CHECKER; }
             
                 return d;
-            
+            }
+
+            float weirdSDF(float3 query, float time) {
+                float3 p = query;
+                float3 a = float3(0, -0.2, 0);
+                float3 b = float3(0,  0.6, 0);
+                float r  = 0.45;
+
+                float capsule = capsuleSDF(p, a, b, r);
+                float donut = torusSDF(p - float3(1.4, 0.5, 0), float2(1., 0.5));
+
+                float3 s = 1.5;
+                p /= s;
+                float pyramid = pyramidSDF(p - float3(0., - 1., - 0.), 1.6);
+                
+                float d = smin(capsule, pyramid, 0.35);
+                return d * s;
+            }
+
+            float sceneSDF(float3 query, float time, out int materialID)
+            {
+
+                // query.xz = mul(rot(radians(time)), query.xz);
+                float op = sceneSDF_op(query, materialID); 
+                
+                float tr = weirdSDF(query, time);
+                // float tr = sphereSDF(query, 1.5);
+                
+                float st = frac(_Time.y*0.15);
+                if (st < 0.3) tr = sphereSDF(query, 1.);
+                else if (st < 0.6) {
+                    query.xz = mul(rot(radians(30.)), query.xz); 
+                    query.yz = mul(rot(radians(45.)), query.yz); 
+                    tr = boxSDF(query, 1.0) - 0.03;
+                }
+                
+               
+
+                if (tr < op) {
+                    materialID = GLASS;
+                    return tr;
+                }
+                return op;
             }
 
             Intersection sdfRayMarch(Ray ray, float time, float inOut, bool ignoreTr)
@@ -104,7 +146,7 @@ Shader "Unlit/RaymarchedGlass"
                 float3 queryPoint = ray.origin;
                 int mat;
                             
-                float signedDist = ignoreTr ? sceneSDF_op(queryPoint, mat) : sceneSDF(queryPoint, mat)*inOut;
+                float signedDist = ignoreTr ? sceneSDF_op(queryPoint, mat) : sceneSDF(queryPoint, time, mat)*inOut;
                                     
                 for (int i = 0; i < MAX_ITER; ++i)
                 {
@@ -120,7 +162,7 @@ Shader "Unlit/RaymarchedGlass"
                     }
                                 
                     queryPoint += ray.dir * signedDist;
-                    signedDist = ignoreTr ? sceneSDF_op(queryPoint, mat) : sceneSDF(queryPoint, mat)*inOut;
+                    signedDist = ignoreTr ? sceneSDF_op(queryPoint, mat) : sceneSDF(queryPoint, time, mat)*inOut;
                 }
                                         
                 intersection.hit = false;
@@ -168,40 +210,6 @@ Shader "Unlit/RaymarchedGlass"
                 float3 col = specular * 0.3 + diffuseEnv * 0.1 + keyDiffuse * 0.6;
                 col = pow(col, 1.0 / 2.2);
                 return col;
-            }
-           
-            float smin(float a, float b, float k)
-            {
-                float h = saturate(0.5 + 0.5 * (b - a) / k);
-                return lerp(b, a, h) - k * h * (1.0 - h);
-            }
-            
-            float sceneSDF(float3 query, out int materialID)
-            {
-
-                // query.xz = mul(rot(radians(time)), query.xz);
-                float op = sceneSDF_op(query, materialID); 
-                
-                // sph
-                int glassMat = GLASS;
-                float3 p = query;
-                float3 a = float3(0, -0.8, 0);
-                float3 b = float3(0,  0.8, 0);
-                float r  = 0.45;
-
-                float capsule = capsuleSDF(p, a, b, r);
-                float pyramid = pyramidSDF(p - float3(0., - 1., - 0.), 1.6);
-
-                float tr = smin(capsule, pyramid, 0.35);
-                // float tr = sphereSDF(query, 1.5);
-                tr = boxSDF(query, 1.0) - 0.03;
-               
-
-                if (tr < op) {
-                    materialID = GLASS;
-                    return tr;
-                }
-                return op;
             }
 
             float3 shootRays(Ray ray, float currIOR)
@@ -299,9 +307,9 @@ Shader "Unlit/RaymarchedGlass"
                 ray.dir = rayDir;
 
                 // spin
-                // float angle = -_Time.y * 0.25;
-                // ray.origin.xz = mul(rot(angle), ray.origin.xz);
-                // ray.dir.xz = mul(rot(angle), ray.dir.xz);
+                float angle = -_Time.y * 0.25;
+                ray.origin.xz = mul(rot(angle), ray.origin.xz);
+                ray.dir.xz = mul(rot(angle), ray.dir.xz);
 
 
                 float ior = 1.; // air
