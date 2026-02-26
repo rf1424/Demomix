@@ -72,3 +72,44 @@ float3 checkerTexture(float2 uv, float size)
 
     return float3(c, c, c);
 }
+
+
+// ------------------------ NOISE ------------------------
+
+float hash31(float3 p)
+{
+    p = frac(p * 0.3183099 + float3(0.1, 0.1, 0.1));
+    p *= 17.0;
+    return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+float valueNoise3D(float3 p)
+{
+    float3 i = floor(p);
+    float3 f = frac(p);
+
+    f = f * f * (3.0 - 2.0 * f);
+
+    float n =
+        lerp(
+            lerp(
+                lerp(hash31(i + float3(0, 0, 0)), hash31(i + float3(1, 0, 0)), f.x),
+                lerp(hash31(i + float3(0, 1, 0)), hash31(i + float3(1, 1, 0)), f.x),
+                f.y),
+            lerp(
+                lerp(hash31(i + float3(0, 0, 1)), hash31(i + float3(1, 0, 1)), f.x),
+                lerp(hash31(i + float3(0, 1, 1)), hash31(i + float3(1, 1, 1)), f.x),
+                f.y),
+
+            f.z);
+
+    return n;
+}
+
+void buildTangentBasis(float3 n, out float3 t, out float3 b)
+{
+    float3 up = (abs(n.y) < 0.9999) ? float3(0, 1, 0) : float3(1, 0, 0);
+    t = normalize(cross(up, n));
+    b = cross(n, t);
+}
+

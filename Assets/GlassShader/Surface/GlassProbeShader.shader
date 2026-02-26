@@ -109,8 +109,8 @@ Shader "Unlit/GlassProbeShader"
                 float3 refractVecB = refract(viewDirWorld, i.normal, iorRatioB);
 
 
-                float3 refracted = float3(0., 0., 0.);// = tex2D(_GrabTexture, uv + refractVecR.xy * refractStrength);
-                
+                float3 refracted = float3(0., 0., 0.);
+
                 for (float j = 0.; j < _BlurrSTEPS; j++) {
                     refracted.r += tex2D(_GrabTexture, uv + refractVecR.xy * (refractStrength + j * _BlurrOffset * 1.)).r;
                     refracted.g += tex2D(_GrabTexture, uv + refractVecG.xy * (refractStrength + j * _BlurrOffset * 2.)).g;
@@ -128,22 +128,15 @@ Shader "Unlit/GlassProbeShader"
 
                 float3 reflection = DecodeHDR(encoded, unity_SpecCube0_HDR);
 
-                //float _FresnelPower = 1.;
-                // float3 _FresnelColor = float3(1., 1., 0.);
-                //float _FresnelStrength = 1.0; 
+                
                 float fresnel = 1.0 - saturate(dot(normal, viewDir));
                 fresnel = pow(fresnel, _FresnelPower);
                 col.rgb = refracted;
-                //col.rgb += fresnel * _FresnelStrength * _FresnelColor.rgb;
+                
                 col.rgb += fresnel * _FresnelStrength * reflection;
                 
-                // col.rgb = reflection;
-                
-
-                // col.rgb = reflection;
                 col.rgb *= float3(0.8, 0.85, 1.0);
-                // col.rgb = reflection;
-                // col.rgb *= float3(0.8, 0.85, 1.0);//float3(0.9, 0.95, 1.0);
+                
                 return col;
             }
      

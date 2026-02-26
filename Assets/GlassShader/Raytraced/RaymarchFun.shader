@@ -1,9 +1,24 @@
-Shader "Unlit/RaymarchedGlass"
+Shader "Unlit/RaymarchFun"
 {
+    // added IOR chromatic aberration
+    // added value-noise roughness 
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
-        _envMap("Environment Cubemap", CUBE) = "" {}
+        // _MainTex ("Texture", 2D) = "white" {}
+        _envMap ("Environment Cubemap", CUBE) = "" {}
+        
+        _tint ("Tint", Color) = (0.8, 0.85, 1.0, 1.0)     
+       
+        // chromatic aberration
+        _ior ("IOR", Range(1.4, 2.)) = 1.5
+        _iorSep ("IOR Separation", Range(0, 0.2)) = 0.1
+
+        [Header(NOISE)]
+        [Space(10)]
+        _nstrength ("Roughness strength", Range(0., 1.)) = 0.1
+        _nfreq ("Roughness frequency", Range(1., 500.)) = 20.
+        
+        
     }
 
     SubShader
@@ -44,6 +59,13 @@ Shader "Unlit/RaymarchedGlass"
             float3 _CameraTarget;
 
             samplerCUBE _envMap;
+
+            float _ior;
+            float _iorSep;
+            float3 _tint;
+
+             float _nstrength;
+             float _nfreq;
            
             #include "raymarchGlass.hlsl" 
             #include "Assets/General/HLSL/3DSDFs.hlsl"
@@ -106,7 +128,7 @@ Shader "Unlit/RaymarchedGlass"
                 float capsule = capsuleSDF(p, a, b, r);
                 float donut = torusSDF(p - float3(1.4, 0.5, 0), float2(1., 0.5));
 
-                float3 s = 1.5;
+                float3 s = 3.;
                 p /= s;
                 float pyramid = pyramidSDF(p - float3(0., - 1., - 0.), 1.6);
                 
@@ -121,7 +143,6 @@ Shader "Unlit/RaymarchedGlass"
                 float op = sceneSDF_op(query, materialID); 
                 
                 float tr = weirdSDF(query, time);
-                // float tr = sphereSDF(query, 1.5);
                 
                 float st = frac(_Time.y*0.15);
                 if (st < 0.3) tr = sphereSDF(query, 1.);
@@ -131,13 +152,37 @@ Shader "Unlit/RaymarchedGlass"
                     tr = boxSDF(query, 1.0) - 0.03;
                 }
                 
-               
+               // float tr = boxSDF(query, 1.0) - 0.03;
 
                 if (tr < op) {
                     materialID = GLASS;
                     return tr;
                 }
                 return op;
+            }
+
+            float3 perturbNormal(float3 pos, float3 nor)
+            {
+    
+                float roughness =  _nstrength;
+                float freq = _nfreq;
+
+                // build tangents
+                float3 t, b;
+                buildTangentBasis(nor, t, b);
+
+                float nx = valueNoise3D(pos * freq);
+                float ny = valueNoise3D(pos * freq + 17.3);
+
+                nx = nx - 0.5;
+                ny = ny - 0.5;
+
+                float3 perturbed =
+                    nor +
+                    roughness * nx * t +
+                    roughness * ny * b;
+
+                return normalize(perturbed);
             }
 
             Intersection sdfRayMarch(Ray ray, float time, float inOut, bool ignoreTr)
@@ -154,9 +199,15 @@ Shader "Unlit/RaymarchedGlass"
                     {
                         intersection.hit = true;
                         intersection.position = queryPoint;
-                        intersection.normal = calculateNormal(queryPoint, time);
-                        intersection.distance = length(queryPoint - ray.origin);
                         intersection.materialID = mat;
+                        intersection.normal = calculateNormal(queryPoint, time);
+
+                        if (mat == GLASS) {
+                            intersection.normal = perturbNormal(intersection.position, intersection.normal);//lerp(perturbNormal(intersection.position, intersection.normal), intersection.normal, sin(_Time.y)*.5+0.5);
+                        }
+                        
+                        intersection.distance = length(queryPoint - ray.origin);
+                        
                         intersection.steps = i;
                         return intersection;
                     }
@@ -232,9 +283,8 @@ Shader "Unlit/RaymarchedGlass"
                 // CASE 3: GLASS
                 else {
                     float3 nor = intersection.normal;
-                    float n1 = currIOR;
-                    float n2 = 1.5; // glass
-
+                    float n1 = currIOR; // air
+                    float n2 = _ior;
 
                     float F = fresnelSchlick(n1, n2, dot(-ray.dir, nor));
 
@@ -248,31 +298,58 @@ Shader "Unlit/RaymarchedGlass"
                     else reflFinal = getShading(finalRefl.normal, finalRefl.position, finalRefl.materialID);
 
                     // PART 2: REFRACT IN AND OUT
-                    float3 refractInDir = refract(ray.dir, nor, n1 / n2);
 
-                    float3 refractInPos = intersection.position - nor * EPSILON * 3.;
-                    Ray refractInRay = {refractInPos, refractInDir};
+                    float3 refrFinal = float3(0., 0., 0.);
+
+                    float3 refractOutPos;
+                    float3 refractInPos;
+                    float3 sum = 0.;
+
                     
-                    Intersection outInter = sdfRayMarch(refractInRay, 0., -1., false);
+                    for (int i = -1; i <= 1; i++) {
+                        float n2_rgb = n2 + i * _iorSep;
+                        float3 refractInDir = refract(ray.dir, nor, n1 / n2_rgb);
+                        // refract in
+                        refractInPos = intersection.position - nor * EPSILON * 3.;
+                        Ray refractInRay = {refractInPos, refractInDir};
 
-                    float3 refractOutPos = outInter.position + outInter.normal * EPSILON * 3.;
-                    float3 refractOutDir = refract(refractInDir, -outInter.normal, n2 / n1);
+                        Intersection outInter = sdfRayMarch(refractInRay, 0., -1., false);
+                        // refract out
+                        refractOutPos = outInter.position + outInter.normal * EPSILON * 3.;
+                        float3 refractOutDir = refract(refractInDir, -outInter.normal, n2_rgb / n1);
 
-                    if (length(refractOutDir) < 1e-6) {
-                        // total internal reflection
-                        refractOutDir = reflect(refractInDir, -outInter.normal);
+                        if (length(refractOutDir) < 1e-6) {
+                            // total internal reflection
+                            refractOutDir = reflect(refractInDir, -outInter.normal);
+                        }
+                        
+                        float3 refrFinal_rgb;
+                        Ray r = {refractOutPos, refractOutDir};
+                        Intersection finalRefr = sdfRayMarch(r, 0., 1., true);
+                        if (!finalRefr.hit) refrFinal_rgb = getEnvMap(refractOutDir);
+                        else refrFinal_rgb = getShading(finalRefr.normal, finalRefr.position, finalRefr.materialID);
+
+                        // rgb sum up
+                        if (i == -1) refrFinal.r = refrFinal_rgb.r;
+                        else if (i==0) refrFinal.g = refrFinal_rgb.g;
+                        else refrFinal.b = refrFinal_rgb.b;
+                       
+
+                        // depth
+                        float3 str = 0.03;
+                        float thn = length(refractOutPos - refractInPos);
+                        float3 abs = exp(-thn*str);
+                        
+                        refrFinal *= abs;
                     }
-
-                    float3 refrFinal;
-                    Ray r = {refractOutPos, refractOutDir};
-                    Intersection finalRefr = sdfRayMarch(r, 0., 1., true);
-                    if (!finalRefr.hit) refrFinal = getEnvMap(refractOutDir);
-                    else refrFinal = getShading(finalRefr.normal, finalRefr.position, finalRefr.materialID);
-             
-
+                    
                     col = F * reflFinal + (1. - F) * refrFinal;
-                    col *= float3(0.8, 0.85, 1.0); // blue tint
-                }
+                    col *= _tint.rgb; // blue tint
+
+                    float rim = pow(1.0 - saturate(dot(-ray.dir, nor)), 3.0);
+                    col += rim * float3(0.1, 0.5, 1.) * 0.8;
+
+                } // end of GLASS
 
                 
                 return col;
