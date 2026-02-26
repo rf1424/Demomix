@@ -17,8 +17,17 @@ Shader "Unlit/RaymarchFun"
         [Space(10)]
         _nstrength ("Roughness strength", Range(0., 1.)) = 0.1
         _nfreq ("Roughness frequency", Range(1., 500.)) = 20.
-        
-        
+
+        _frostColor ("Frost Color", Color) = (1., 1., 1., 1.)
+        _frost ("Frostiness", Range(0., 0.8)) = 0.5
+
+        [RIM]
+        [Space(10)]
+        _rimColor ("Rim Color", Color) = (0.1, 0.5, 1., 1.)
+        _rimPower ("Rim Power", Range(0., 5.)) = 3.0
+        _rimStrength ("Rim Strength", Range(0., 2.)) = 0.8
+
+        _depthFactor ("Depth Attenuation", Range(0., 1.)) = 0.05
     }
 
     SubShader
@@ -64,8 +73,19 @@ Shader "Unlit/RaymarchFun"
             float _iorSep;
             float3 _tint;
 
-             float _nstrength;
-             float _nfreq;
+            float _nstrength;
+            float _nfreq;
+
+            float3 _frostColor;
+            float _frost;
+            float _time;
+
+            float3 _rimColor;
+            float _rimStrength;
+            float _rimPower;
+
+            float _depthFactor;
+            
            
             #include "raymarchGlass.hlsl" 
             #include "Assets/General/HLSL/3DSDFs.hlsl"
@@ -142,9 +162,9 @@ Shader "Unlit/RaymarchFun"
                 // query.xz = mul(rot(radians(time)), query.xz);
                 float op = sceneSDF_op(query, materialID); 
                 
-                float tr = weirdSDF(query, time);
+                float tr = weirdSDF(query, _time);
                 
-                float st = frac(_Time.y*0.15);
+                float st = frac(_time*0.15);
                 if (st < 0.3) tr = sphereSDF(query, 1.);
                 else if (st < 0.6) {
                     query.xz = mul(rot(radians(30.)), query.xz); 
@@ -152,7 +172,7 @@ Shader "Unlit/RaymarchFun"
                     tr = boxSDF(query, 1.0) - 0.03;
                 }
                 
-               // float tr = boxSDF(query, 1.0) - 0.03;
+               // tr = boxSDF(query, 1.0) - 0.03;
 
                 if (tr < op) {
                     materialID = GLASS;
@@ -191,7 +211,7 @@ Shader "Unlit/RaymarchFun"
                 float3 queryPoint = ray.origin;
                 int mat;
                             
-                float signedDist = ignoreTr ? sceneSDF_op(queryPoint, mat) : sceneSDF(queryPoint, time, mat)*inOut;
+                float signedDist = ignoreTr ? sceneSDF_op(queryPoint, mat) : sceneSDF(queryPoint, _time, mat)*inOut;
                                     
                 for (int i = 0; i < MAX_ITER; ++i)
                 {
@@ -200,10 +220,11 @@ Shader "Unlit/RaymarchFun"
                         intersection.hit = true;
                         intersection.position = queryPoint;
                         intersection.materialID = mat;
-                        intersection.normal = calculateNormal(queryPoint, time);
+                        intersection.normal = calculateNormal(queryPoint, _time);
 
                         if (mat == GLASS) {
                             intersection.normal = perturbNormal(intersection.position, intersection.normal);//lerp(perturbNormal(intersection.position, intersection.normal), intersection.normal, sin(_Time.y)*.5+0.5);
+                            // intersection.normal = offsetNormal(intersection.position, intersection.normal, time);
                         }
                         
                         intersection.distance = length(queryPoint - ray.origin);
@@ -298,7 +319,7 @@ Shader "Unlit/RaymarchFun"
                     else reflFinal = getShading(finalRefl.normal, finalRefl.position, finalRefl.materialID);
 
                     // PART 2: REFRACT IN AND OUT
-
+                    
                     float3 refrFinal = float3(0., 0., 0.);
 
                     float3 refractOutPos;
@@ -333,22 +354,25 @@ Shader "Unlit/RaymarchFun"
                         if (i == -1) refrFinal.r = refrFinal_rgb.r;
                         else if (i==0) refrFinal.g = refrFinal_rgb.g;
                         else refrFinal.b = refrFinal_rgb.b;
-                       
-
-                        // depth
-                        float3 str = 0.03;
-                        float thn = length(refractOutPos - refractInPos);
-                        float3 abs = exp(-thn*str);
-                        
-                        refrFinal *= abs;
+            
                     }
-                    
+                    // depth
+                    float str = _depthFactor;
+                    float thn = length(refractOutPos - refractInPos);
+                    float abs = exp(-thn*str);
+                    refrFinal *= abs;
+                    // tint
                     col = F * reflFinal + (1. - F) * refrFinal;
-                    col *= _tint.rgb; // blue tint
+                    col *= _tint.rgb;
 
-                    float rim = pow(1.0 - saturate(dot(-ray.dir, nor)), 3.0);
-                    col += rim * float3(0.1, 0.5, 1.) * 0.8;
+                    // rim
+                    float rim = pow(1.0 - saturate(dot(-ray.dir, nor)), _rimPower);
+                    col += rim * _rimColor * _rimStrength;
 
+                    // frost
+                    col = lerp(col, _frostColor, _frost);
+
+                    // col = posterize(col, 3.);
                 } // end of GLASS
 
                 

@@ -116,5 +116,6 @@ public class MouseMove : MonoBehaviour
         // Debug.Log("Camera Position: " + cameraPosition + " Target Position: " + targetPosition);
         Shader.SetGlobalVector("_CameraPos", cameraPosition);
         Shader.SetGlobalVector("_CameraTarget", targetPosition);
+        Shader.SetGlobalFloat("_time", Time.time);
     }
 }

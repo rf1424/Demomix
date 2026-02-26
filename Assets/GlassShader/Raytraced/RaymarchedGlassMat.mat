@@ -85,10 +85,18 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - _ior: 1.613
-    - _iorSep: 0.023
+    - _depthFactor: 0.03
+    - _frost: 0.098
+    - _ior: 1.876
+    - _iorSep: 0.1071
+    - _nfreq: 18
+    - _nstrength: 0.047
+    - _rimPower: 1.98
+    - _rimStrength: 1.23
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _tint: {r: 0.8, g: 0.9137255, b: 0.8726943, a: 1}
+    - _frostColor: {r: 1, g: 1, b: 1, a: 1}
+    - _rimColor: {r: 0.23099414, g: 1, b: 0.10196078, a: 1}
+    - _tint: {r: 0.8517266, g: 0.8993367, b: 0.9339623, a: 1}
   m_BuildTextureStacks: []

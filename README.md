@@ -1,10 +1,15 @@
 # Realtime Glass Shader
 
-https://github.com/user-attachments/assets/c4bfc077-c712-418f-b260-a94611e66398
+I wanted to write a physically-based glass,  shader that runs in 
+realtime. Transparency is a difficult problem in realtime and there are 
+many approaches to this. 
+I mainly attempted three approaches which I will describe in detail below. 
+1. Refraction using opaque 2D textures
+2. Reflection using probe-based textures
+3. Physically accurate ray interactions with SDF-based raymarching
 
-
-
-
+#### Final Result
+https://github.com/user-attachments/assets/c4bfc077-c712-418f-b260-a94611e66398 
 
 #### Approach 1. Use Opaque 2D texture and sample
 I first rendered the scene’s opaque objects into a texture. Then I rendered the transparent objects by sampling that opaque texture using the refracted direction. 
@@ -65,6 +70,8 @@ So I decided to take an SDF raymarching approach. Signed Distance Functions are 
 ![alt text](Recording/Screenshot%202026-02-19%20154241.png)
 We now properly handle backfaces and get physically consistent refraction and reflection!
 
+![alt text](<Screenshot 2026-02-25 224931.png>)
+![alt text](<Screenshot 2026-02-25 225019.png>)
 
 #### Notes on further improvements
 
