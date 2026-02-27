@@ -1,6 +1,6 @@
 # Realtime Glass Shader
 
-I wanted to write a physically-based glass,  shader that runs in 
+I wanted to write a physically-based glass shader that runs in 
 realtime. Transparency is a difficult problem in realtime and there are 
 many approaches to this. 
 I mainly attempted three approaches which I will describe in detail below. 
@@ -10,6 +10,9 @@ I mainly attempted three approaches which I will describe in detail below.
 
 #### Final Result
 https://github.com/user-attachments/assets/c4bfc077-c712-418f-b260-a94611e66398 
+
+https://github.com/user-attachments/assets/a0bc91f4-ba04-46a8-9dd4-07c453ca16c3
+
 
 #### Approach 1. Use Opaque 2D texture and sample
 I first rendered the scene’s opaque objects into a texture. Then I rendered the transparent objects by sampling that opaque texture using the refracted direction. 
