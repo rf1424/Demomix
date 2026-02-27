@@ -156,23 +156,49 @@ Shader "Unlit/RaymarchFun"
                 return d * s;
             }
 
+            float3 OpTwist(float3 p)
+            {
+                const float k = 0.7; // twist amount
+
+                float c = cos(k * p.y);
+                float s = sin(k * p.y);
+
+                float2x2 m = float2x2(c, -s,
+                                      s,  c);
+
+                float2 xz = mul(m, p.xz);
+                float3 q = float3(xz, p.y);
+
+                return q;
+            }
+
             float sceneSDF(float3 query, float time, out int materialID)
             {
 
-                // query.xz = mul(rot(radians(time)), query.xz);
+                
                 float op = sceneSDF_op(query, materialID); 
                 
-                float tr = weirdSDF(query, _time);
+                // query = OpTwist(query);
+
+                // float tr = weirdSDF(query, _time);
+                // float tr = sphereSDF(query, 1.5);
+                float tr = boxSDF(query, 1.0) - 0.03;
+                // float st = frac(_time*0.15);
+                // if (st < 0.3) tr = sphereSDF(query, 1.);
+                // else if (st < 0.6) {
+                //     query.xz = mul(rot(radians(30.)), query.xz); 
+                //     query.yz = mul(rot(radians(45.)), query.yz); 
+                //     tr = boxSDF(query, 1.0) - 0.03;
+                // }
+                // tr = octahedronSDF(query, 1.5) - 0.03;
                 
-                float st = frac(_time*0.15);
-                if (st < 0.3) tr = sphereSDF(query, 1.);
-                else if (st < 0.6) {
-                    query.xz = mul(rot(radians(30.)), query.xz); 
-                    query.yz = mul(rot(radians(45.)), query.yz); 
-                    tr = boxSDF(query, 1.0) - 0.03;
-                }
-                
-               // tr = boxSDF(query, 1.0) - 0.03;
+               // query = OpTwist(query);
+               // query.yz = mul(rot(radians(-30.)), query.yz); 
+               // float tr = boxSDF(query, float3(1., 1.5, 0.2)) - 0.1; 
+               // float tr =weirdSDF(query, _time); 
+               
+               // query.xy = mul(rot(radians(-30.)), query.xy);
+               // tr = torusSDF(query, float2(1., 0.5));
 
                 if (tr < op) {
                     materialID = GLASS;
@@ -260,7 +286,7 @@ Shader "Unlit/RaymarchFun"
                 else if (materialID == 1) albedo = float3(1., 0., 0.2);
                 else if (materialID == YELLOW) albedo = float3(1., 1., 0.01);
                 else if (materialID == BLUE) albedo = float3(0.01, 0.05, 1.);
-                else if (materialID == CHECKER) { albedo = 1. - checkerTexture(pos.xz, .5) * 0.3; return albedo; }
+                else if (materialID == CHECKER) { albedo = 1. - checkerTexture(pos.xz, .5) * 0.3; return albedo;}
                 else albedo = float3(0.5, 1., 0.5);
 
                 float3 viewDir = normalize(_WorldSpaceCameraPos - pos);
@@ -408,9 +434,9 @@ Shader "Unlit/RaymarchFun"
                 ray.dir = rayDir;
 
                 // spin
-                // float angle = -_Time.y * 0.25;
+                // float angle = -_time * 0.25;
                 // ray.origin.xz = mul(rot(angle), ray.origin.xz);
-                // ray.dir.xz = mul(rot(angle), ray.dir.xz);
+                // ray.dir.xz = mul(rot(angle), ray.dir.xz); 
 
 
                 float ior = 1.; // air

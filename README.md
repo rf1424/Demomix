@@ -70,8 +70,95 @@ So I decided to take an SDF raymarching approach. Signed Distance Functions are 
 ![alt text](Recording/Screenshot%202026-02-19%20154241.png)
 We now properly handle backfaces and get physically consistent refraction and reflection!
 
-![alt text](<Screenshot 2026-02-25 224931.png>)
-![alt text](<Screenshot 2026-02-25 225019.png>)
+
+### Stylization and Parameterization
+
+**Index of Refraction**
+
+<table>
+<tr>
+<td align="center"><b>IOR 1.5</b></td>
+<td align="center"><b>IOR 1.75</b></td>
+</tr>
+<tr>
+<td><img src="Recording/ior15.png" width="300"/></td>
+<td><img src="Recording/ior175.png" width="300"/></td>
+</tr>
+</table>
+
+**Normal distortion using noise**
+
+<table>
+<tr>
+<td align="center"><b>normal map visualization</b></td>
+<td align="center"><b>result</b></td>
+</tr>
+<tr>
+<td><img src="Recording/bumpmap1.png" width="300"/></td>
+<td><img src="Recording/bumpmap0.png" width="300"/></td>
+</tr>
+</table>
+
+**Diffraction by offsetting IOR based on color channel**
+
+<table>
+<tr>
+<td align="center"><b>no diffraction</b></td>
+<td align="center"><b>with diffraction</b></td>
+</tr>
+<tr>
+<td><img src="Recording/noIOR.png" width="300"/></td>
+<td><img src="Recording/yesIOR.png" width="300"/></td>
+</tr>
+</table>
+
+**Color and tint**
+
+<table>
+<tr>
+<td align="center"><b>normal map visualization</b></td>
+<td align="center"><b>green tint</b></td>
+<td align="center"><b>fog</b></td>
+</tr>
+<tr>
+<td><img src="Recording/color0.png" width="300"/></td>
+<td><img src="Recording/color1.png" width="300"/></td>
+<td><img src="Recording/color2.png" width="300"/></td>
+</tr>
+</table>
+
+**Depth attenuation**
+
+<table>
+<tr>
+<td align="center"><b>no depth attenuation</b></td>
+<td align="center"><b>with depth attenuation</b></td>
+</tr>
+<tr>
+<td><img src="Recording/noDepth.png" width="300"/></td>
+<td><img src="Recording/yesDepth.png" width="300"/></td>
+</tr>
+</table>
+
+**Rim light**
+
+<table>
+<tr>
+<td align="center"><b>no rim lighting</b></td>
+<td align="center"><b>with rim lighting</b></td>
+</tr>
+<tr>
+<td><img src="Recording/rim1.png" width="300"/></td>
+<td><img src="Recording/rim0.png" width="300"/></td>
+</tr>
+</table>
+
+
+
+Example parameter sets 
+![alt text](Recording/frost2.png) frosted glass 
+
+
 
 #### Notes on further improvements
 
