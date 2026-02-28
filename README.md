@@ -84,8 +84,8 @@ We now properly handle backfaces and get physically consistent refraction and re
 <td align="center"><b>IOR 1.75</b></td>
 </tr>
 <tr>
-<td><img src="Recording/ior15.png" width="300"/></td>
-<td><img src="Recording/ior175.png" width="300"/></td>
+<td><img src="Recording/ior15.png"/></td>
+<td><img src="Recording/ior175.png"/></td>
 </tr>
 </table>
 
@@ -97,8 +97,8 @@ We now properly handle backfaces and get physically consistent refraction and re
 <td align="center"><b>result</b></td>
 </tr>
 <tr>
-<td><img src="Recording/bumpmap1.png" width="300"/></td>
-<td><img src="Recording/bumpmap0.png" width="300"/></td>
+<td><img src="Recording/bumpmap1.png" /></td>
+<td><img src="Recording/bumpmap0.png" /></td>
 </tr>
 </table>
 
@@ -110,8 +110,8 @@ We now properly handle backfaces and get physically consistent refraction and re
 <td align="center"><b>with diffraction</b></td>
 </tr>
 <tr>
-<td><img src="Recording/noIOR.png" width="300"/></td>
-<td><img src="Recording/yesIOR.png" width="300"/></td>
+<td><img src="Recording/noIOR.png"/></td>
+<td><img src="Recording/yesIOR.png"/></td>
 </tr>
 </table>
 
@@ -124,9 +124,9 @@ We now properly handle backfaces and get physically consistent refraction and re
 <td align="center"><b>fog</b></td>
 </tr>
 <tr>
-<td><img src="Recording/color0.png" width="300"/></td>
-<td><img src="Recording/color1.png" width="300"/></td>
-<td><img src="Recording/color2.png" width="300"/></td>
+<td><img src="Recording/color0.png"/></td>
+<td><img src="Recording/color1.png"/></td>
+<td><img src="Recording/color2.png"/></td>
 </tr>
 </table>
 
@@ -138,8 +138,8 @@ We now properly handle backfaces and get physically consistent refraction and re
 <td align="center"><b>with depth attenuation</b></td>
 </tr>
 <tr>
-<td><img src="Recording/noDepth.png" width="300"/></td>
-<td><img src="Recording/yesDepth.png" width="300"/></td>
+<td><img src="Recording/noDepth.png"/></td>
+<td><img src="Recording/yesDepth.png"/></td>
 </tr>
 </table>
 
@@ -151,8 +151,8 @@ We now properly handle backfaces and get physically consistent refraction and re
 <td align="center"><b>with rim lighting</b></td>
 </tr>
 <tr>
-<td><img src="Recording/rim1.png" width="300"/></td>
-<td><img src="Recording/rim0.png" width="300"/></td>
+<td><img src="Recording/rim1.png"/></td>
+<td><img src="Recording/rim0.png"/></td>
 </tr>
 </table>
 
