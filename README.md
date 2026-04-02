@@ -1,25 +1,26 @@
 # Realtime Glass Shader
 
-I wanted to write a physically-based glass shader that runs in 
-realtime. Transparency is a difficult problem in realtime and there are 
+In this project, I wanted to write a physically based glass shader that supports both refraction and reflection 
+while running in real time. Transparency is a difficult problem in realtime and there are 
 many approaches to this. 
 I mainly attempted three approaches which I will describe in detail below. 
-1. Refraction using opaque 2D textures
-2. Reflection using probe-based textures
+
+1. Refraction via opaque scene capture to a 2D texture, sampled in the transparent pass
+2. Reflections via probe-based environment sampling
 3. Physically accurate ray interactions with SDF-based raymarching
 
-#### Final Result
+### Final Result
 https://github.com/user-attachments/assets/c4bfc077-c712-418f-b260-a94611e66398 
-
+### Stylized Glass Showcase
 https://github.com/user-attachments/assets/a0bc91f4-ba04-46a8-9dd4-07c453ca16c3
 
 
-#### Approach 1. Use Opaque 2D texture and sample
-I first rendered the scene’s opaque objects into a texture. Then I rendered the transparent objects by sampling that opaque texture using the refracted direction. 
+### Approach 1. Refraction via opaque scene capture to a 2D texture
+I first rendered the scene’s opaque objects from the camera's perspective into a 2D texture. Then I rendered the transparent objects by sampling that opaque texture using the refracted direction. 
 ![alt text](Recording/badoffset2.png)
 
 This is simple and efficient, but it has limitations. 
-First, because the refracted ray is a 3D vector calculated using the view vector, the normal, and the ior, the opaque texture is 2D. 
+First, although the refracted ray is a 3D vector (calculated using the view vector, the normal, and the ior), the opaque texture is 2D. 
 Depth is not accounted for properly and the offset is not physically accurate. In some cases the offset does not look very convincing:
 ![alt text](Recording/badoffset.png)
 
@@ -75,6 +76,10 @@ We now properly handle backfaces and get physically consistent refraction and re
 
 
 ### Stylization and Parameterization
+The shader exposes tunable parameters to achieve a range of appearances, 
+from stylized looks to more physically based glass.
+(This part of the writeup is in progress.)
+
 
 **Index of Refraction**
 
@@ -158,8 +163,8 @@ We now properly handle backfaces and get physically consistent refraction and re
 
 
 
-Example parameter sets 
-![alt text](Recording/frost2.png) frosted glass 
+Example parameter set: Frosted glass
+![alt text](Recording/frost2.png)
 
 
 
@@ -174,3 +179,9 @@ Rendering a backface depth buffer
 Instead of raymarching, I saw an approach with a backface depth buffer being used in surface shaders. It uses the backface texture to approximate the thickness of the object, which is helpful for refracting in and out the object.
 
 ### Resources
+
+https://www.pbr-book.org/
+
+https://blog.maximeheckel.com/posts/refraction-dispersion-and-other-shader-light-effects/
+
+https://www.youtube.com/watch?v=NCpaaLkmXI8
